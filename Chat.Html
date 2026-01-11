@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Custom Twitch Chat</title>
+<style>
+body {
+  margin: 0;
+  padding: 10px;
+  background: transparent;
+  font-family: Arial Black, sans-serif;
+  overflow: hidden;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.message {
+  background: rgba(0,0,0,0.3);
+  border: 2px solid #ff0000;
+  margin: 6px 0;
+  padding: 6px 8px;
+  animation: slideIn 0.3s ease-out;
+  position: relative;
+}
+
+.username {
+  color: #ff2a2a;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+
+.highlight {
+  color: red;
+  font-size: 28px;
+  font-weight: bold;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(40px); opacity:0; }
+  to { transform: translateX(0); opacity:1; }
+}
+</style>
+</head>
+<body>
+<div class="chat-container" id="chat"></div>
+
+<!-- tmi.js library for Twitch chat -->
+<script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/dist/tmi.min.js"></script>
+<script>
+// --- CONFIGURE THIS ---
+const CHANNEL_NAME = "otm_grady24x"; // your Twitch channel
+// -----------------------
+
+const chatContainer = document.getElementById("chat");
+
+// Function to add a message
+function addMessage(username, text) {
+  const msgDiv = document.createElement("div");
+  msgDiv.classList.add("message");
+
+  const nameSpan = document.createElement("span");
+  nameSpan.classList.add("username");
+  nameSpan.innerText = username + ":";
+  msgDiv.appendChild(nameSpan);
+
+  const textSpan = document.createElement("span");
+  textSpan.innerText = text;
+  msgDiv.appendChild(textSpan);
+
+  // Highlight messages with !!!
+  if(text.toUpperCase().includes("!!!")) {
+    const highlight = document.createElement('span');
+    highlight.classList.add('highlight');
+    highlight.innerText = "ドン!!";
+    msgDiv.appendChild(highlight);
+  }
+
+  chatContainer.appendChild(msgDiv);
+  chatContainer.scrollTop = chatContainer.scrollHeight; // scroll to bottom
+}
+
+// --- CONNECT TO TWITCH CHAT ---
+const client = new tmi.Client({
+  channels: [ CHANNEL_NAME ]
+});
+
+client.connect();
+
+client.on('message', (channel, tags, message, self) => {
+  if(self) return; // ignore your own messages
+  addMessage(tags['display-name'], message);
+});
+</script>
+</body>
+</html>
